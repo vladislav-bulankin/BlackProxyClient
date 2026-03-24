@@ -1,0 +1,20 @@
+﻿<Window x:Class="BlackTunnel.UI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:BlackTunnel.UI"
+        mc:Ignorable="d"
+        Title="Black Tunnel"
+        Height="580" 
+        Width="380"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        Background="#0F0F0F"
+        AllowsTransparency="True"
+        MouseLeftButtonDown="Window_MouseLeftButtonDown">
+    <Border Background="#0F0F0F" CornerRadius="12">
+        <Frame x:Name="MainFrame" 
+               NavigationUIVisibility="Hidden"/>
+    </Border>
+</Window>

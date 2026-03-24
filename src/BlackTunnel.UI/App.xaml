@@ -1,0 +1,11 @@
+﻿<Application x:Class="BlackTunnel.UI.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:BlackTunnel.UI"
+             xmlns:converters="clr-namespace:BlackTunnel.UI.Converters"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <converters:NullToCollapsedConverter x:Key="NullToCollapsedConverter"/>
+        <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </Application.Resources>
+</Application>
