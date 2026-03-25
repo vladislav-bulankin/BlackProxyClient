@@ -3,10 +3,10 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-      xmlns:local="clr-namespace:BlackTunnel.UI.Views"
+      xmlns:vm="clr-namespace:BlackTunnel.UI.ViewModels"
       mc:Ignorable="d" d:DesignWidth="800"
       Title="Login" Height="502">
-    <Grid>
+    <Grid DataContext="LoginViewModel">
         <Border Background="#1A1A1A" CornerRadius="12" MaxWidth="340" Margin="20">
             <StackPanel Margin="30">
 
@@ -30,30 +30,34 @@
                            HorizontalAlignment="Center" 
                            Margin="0,0,0,30"
                            Foreground="White"/>
-                
-                <TextBlock Text="Username or email" FontSize="14" Margin="0,0,0,6" Foreground="#D1D5DB"/>
+
+                <TextBlock Text="Username or email" FontSize="14" Margin="0,0,0,8" Foreground="#D1D5DB"/>
                 <TextBox x:Name="txtUsername"
-                         Height="44"
-                         Padding="14,0"
-                         FontSize="15"
-                         Background="#252525"
-                         BorderBrush="#3A3A3A"
-                         BorderThickness="1"
-                         Foreground="White"
-                         CaretBrush="White"
-                         Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"/>
+                        Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
+                        Height="48"
+                        Padding="16,0"
+                        FontSize="15"
+                        VerticalContentAlignment="Center"    
+                        HorizontalContentAlignment="Left"
+                        Background="#252525"
+                        BorderBrush="#3A3A3A"
+                        BorderThickness="1"
+                        Foreground="White"
+                        CaretBrush="White"/>       
 
-                <TextBlock Text="Password" FontSize="14" Margin="0,20,0,6" Foreground="#D1D5DB"/>
+                <!-- Password -->
+                    <TextBlock Text="Password" FontSize="14" Margin="0,20,0,8" Foreground="#D1D5DB"/>
                 <PasswordBox x:Name="txtPassword"
-                             Height="44"
-                             Padding="14,0"
-                             FontSize="15"
-                             Background="#252525"
-                             BorderBrush="#3A3A3A"
-                             BorderThickness="1"
-                             Foreground="White"
-                             PasswordChanged="PasswordBox_PasswordChanged"/>
-
+                        Height="48"
+                        Padding="16,0"
+                        FontSize="15"
+                        VerticalContentAlignment="Center"     
+                        Background="#252525"
+                        BorderBrush="#3A3A3A"
+                        BorderThickness="1"
+                        Foreground="White"
+                        PasswordChanged="PasswordBox_PasswordChanged"/>    
+                
                 <Button x:Name="btnLogin"
                         Content="Log In"
                         Height="48"

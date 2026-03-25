@@ -10,7 +10,6 @@ namespace BlackTunnel.UI.Views {
     public partial class LoginPage : Page {
         public LoginPage () {
             InitializeComponent();
-
             if (DataContext is LoginViewModel vm) {
                 vm.NavigationRequested += OnNavigationRequested;
             }

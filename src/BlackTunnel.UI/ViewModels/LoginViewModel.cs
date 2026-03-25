@@ -9,8 +9,9 @@ using System.Windows.Input;
 
 namespace BlackTunnel.UI.ViewModels; 
 public class LoginViewModel : INotifyPropertyChanged {
-    private readonly IAuthController authController;
 
+    private readonly IAuthController authController;
+    public ICommand LoginCommand { get; }
     public LoginViewModel (IAuthController authController) {
         this.authController = authController;
         LoginCommand = new RelayCommand(async () => await LoginAsync(), CanLogin);
@@ -47,8 +48,6 @@ public class LoginViewModel : INotifyPropertyChanged {
         get => isLoading;
         set { isLoading = value; OnPropertyChanged(); }
     }
-
-    public ICommand LoginCommand { get; }
 
     public event EventHandler<PageNavigationEventArgs>? NavigationRequested;
 

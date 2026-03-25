@@ -8,8 +8,10 @@ namespace BlackTunnel.UI;
 /// Interaction logic for App.xaml
 /// </summary>
 public partial class App : Application {
-    private readonly IHost host;
-    public App () {
+    private IHost? host;
+
+    protected override void OnStartup (StartupEventArgs e) {
+        base.OnStartup (e);
         host = Host.CreateDefaultBuilder()
             .ConfigureAppConfiguration((context, builder) => {
                 builder.AddFiles();
@@ -19,14 +21,8 @@ public partial class App : Application {
                 services.ConfigurationRelations(context);
             })
             .Build();
-    }
-
-    protected override async void OnStartup (StartupEventArgs e) {
-        await host.StartAsync();
         var mainWindow = host.Services.GetRequiredService<MainWindow>();
         mainWindow.Show();
-
-        base.OnStartup(e);
     }
 
     protected override async void OnExit (ExitEventArgs e) {
