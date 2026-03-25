@@ -1,5 +1,5 @@
-﻿using BlackTunnel.UI.Views;
-using System.Windows;
+﻿using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 
 namespace BlackTunnel.UI {
@@ -7,9 +7,9 @@ namespace BlackTunnel.UI {
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window {
+        public Frame MainFrame => MainFrameElement;
         public MainWindow () {
             InitializeComponent();
-            MainFrame.Navigate(new LoginPage());
         }
 
         private void Window_MouseLeftButtonDown (object sender, MouseButtonEventArgs e) {
@@ -17,5 +17,11 @@ namespace BlackTunnel.UI {
                 DragMove();
             }
         }
+
+        private void MinimizeBtn_Click (object sender, RoutedEventArgs e)
+            => WindowState = WindowState.Minimized;
+
+        private void CloseBtn_Click (object sender, RoutedEventArgs e)
+            => Application.Current.Shutdown();
     }
 }

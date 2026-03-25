@@ -1,12 +1,15 @@
-﻿using System.Windows.Controls;
+﻿using BlackTunnel.UI.ViewModels;
+using System.Windows.Controls;
 
 namespace BlackTunnel.UI.Views {
     /// <summary>
     /// Логика взаимодействия для ServersPage.xaml
     /// </summary>
     public partial class ServersPage : Page {
-        public ServersPage () {
+
+        public ServersPage (ServersViewModel servers) {
             InitializeComponent();
+            DataContext = servers;
         }
     }
 }

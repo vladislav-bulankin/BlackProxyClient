@@ -15,8 +15,12 @@ public class AuthController : IAuthController {
         throw new NotImplementedException();
     }
 
-    public Task<LoginResponse> LoginAsync (string username, string password) {
-        throw new NotImplementedException();
+    public async Task<LoginResponse> LoginAsync (string username, string password) {
+        return new() {
+            IsSuccess = true,
+            AccessToken = Guid.NewGuid().ToString(),
+            RefreshToken = Guid.NewGuid().ToString()
+        };
     }
 
     public async Task SetCredentialsAsync (string userName, string password) {

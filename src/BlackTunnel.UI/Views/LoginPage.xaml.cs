@@ -8,13 +8,9 @@ namespace BlackTunnel.UI.Views {
     /// Логика взаимодействия для LoginPage.xaml
     /// </summary>
     public partial class LoginPage : Page {
-        public LoginPage () {
+        public LoginPage (LoginViewModel viewModel) {
             InitializeComponent();
-            if (DataContext is LoginViewModel vm) {
-                vm.NavigationRequested += OnNavigationRequested;
-            }
-
-            this.Unloaded += OnUnloaded;
+            DataContext = viewModel;
         }
 
         private void OnNavigationRequested (object? sender, PageNavigationEventArgs e) {

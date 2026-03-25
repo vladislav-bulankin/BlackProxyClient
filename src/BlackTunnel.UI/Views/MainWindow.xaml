@@ -3,18 +3,82 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:BlackTunnel.UI"
         mc:Ignorable="d"
         Title="Black Tunnel"
-        Height="580" 
+        Height="580"
         Width="380"
         WindowStyle="None"
         ResizeMode="NoResize"
-        Background="#0F0F0F"
+        Background="Transparent"
         AllowsTransparency="True"
         MouseLeftButtonDown="Window_MouseLeftButtonDown">
+
     <Border Background="#0F0F0F" CornerRadius="12">
-        <Frame x:Name="MainFrame" 
-               NavigationUIVisibility="Hidden"/>
+        <Grid>
+            <Grid.RowDefinitions>
+                <!-- Полоска с кнопками управления -->
+                <RowDefinition Height="32"/>
+                <!-- Весь остальной контент -->
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Кнопки свернуть / закрыть -->
+            <StackPanel Grid.Row="0"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Margin="0,0,8,0">
+
+                <Button Width="28" Height="28"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Cursor="Hand"
+                        Click="MinimizeBtn_Click"
+                        ToolTip="Свернуть">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="6">
+                                <TextBlock Text="─" FontSize="11" Foreground="#6B7280"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Bg" Property="Background" Value="#1E2130"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+
+                <Button Width="28" Height="28"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Cursor="Hand"
+                        Click="CloseBtn_Click"
+                        ToolTip="Закрыть">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="6">
+                                <TextBlock Text="✕" FontSize="11" Foreground="#6B7280"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Bg" Property="Background" Value="#C0392B"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+
+            </StackPanel>
+
+            <!-- Контент страниц -->
+            <Frame Grid.Row="1"
+                   x:Name="MainFrameElement"
+                   NavigationUIVisibility="Hidden"/>
+        </Grid>
     </Border>
 </Window>
