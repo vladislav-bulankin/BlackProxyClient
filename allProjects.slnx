@@ -2,7 +2,5 @@
   <Project Path="src/BlackTunnel.Core.Abstractions/BlackTunnel.Core.Abstractions.csproj" Id="6253c467-176f-4a81-a3e4-630ec16026c5" />
   <Project Path="src/BlackTunnel.Core/BlackTunnel.Core.csproj" Id="389b0c68-9f75-455c-afd4-126ce0ccaaa9" />
   <Project Path="src/BlackTunnel.Domain/BlackTunnel.Domain.csproj" Id="b9242aa8-7919-4850-a2b2-90d1e261aef7" />
-  <Project Path="src/BlackTunnel.Network.Abstractions/BlackTunnel.Network.Abstractions.csproj" Id="48229534-fc66-4862-9dbb-a12b654417d7" />
-  <Project Path="src/BlackTunnel.Network/BlackTunnel.Network.csproj" Id="8a9feff4-20b9-4358-a451-3fe39a863325" />
   <Project Path="src/BlackTunnel.UI/BlackTunnel.UI.csproj" />
 </Solution>
