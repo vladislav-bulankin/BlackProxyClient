@@ -4,7 +4,8 @@ using System.Net;
 namespace BlackTunnel.Domain.Runtime; 
 public class RouteTable {
 
-    private readonly ConcurrentDictionary<IPEndPoint, UdpRoute> routes = new();
+    private readonly ConcurrentDictionary<ushort, UdpRoute> udpRoutes = new();
+    private readonly ConcurrentDictionary<ushort, IPEndPoint> tcpRoutes = new();
     private readonly TimeSpan ttl;
     private readonly Timer cleanupTimer;
 
@@ -15,31 +16,38 @@ public class RouteTable {
             TimeSpan.FromSeconds(30));
     }
 
-    public void AddOrRefresh (UdpRoute route) {
-        if(routes.TryGetValue(route.RemoteEndpoint, out var existing)){
+    public void SaveTcpRedirect (ushort srcPort, IPEndPoint originalDest) {
+        tcpRoutes[srcPort] = originalDest;
+    }
+
+    public bool TryGetOriginalTcpDest (ushort srcPort, out IPEndPoint dest) {
+        return tcpRoutes.TryRemove(srcPort, out dest); 
+    }
+
+    public void AddOrRefreshUdpRoute (ushort srcPort, UdpRoute route) {
+        if (udpRoutes.TryGetValue(srcPort, out var existing)) {
             if ((DateTime.UtcNow - existing.LastSeen).TotalSeconds > 10) {
                 existing.Refresh();
             }
             return;
         }
-        // Новый маршрут — добавляем
-        routes.TryAdd(route.RemoteEndpoint, route);
+        udpRoutes.TryAdd(srcPort, route);
     }
 
-    public bool TryGet (IPEndPoint remote, out UdpRoute? route)
-        => routes.TryGetValue(remote, out route);
+    public bool TryGetUdpRoute (ushort dstPort, out UdpRoute? route)
+        => udpRoutes.TryGetValue(dstPort, out route);
 
-    public void Remove (IPEndPoint remote)
-        => routes.TryRemove(remote, out _);
+    public void Remove (ushort remote)
+        => udpRoutes.TryRemove(remote, out _);
 
     public void Clear ()
-        => routes.Clear();
+        => udpRoutes.Clear();
 
     private void Cleanup (object? _) {
         var threshold = DateTime.UtcNow - ttl;
-        foreach (var (key, route) in routes) {
+        foreach (var (key, route) in udpRoutes) {
             if (route.LastSeen < threshold) {
-                routes.TryRemove(key, out var _);
+                udpRoutes.TryRemove(key, out var _);
             }
         }
     }

@@ -1,5 +1,4 @@
 ﻿using BlackTunnel.Domain.Runtime;
-using System.Net;
 
 namespace BlackTunnel.Core.Abstractions.DataPlane; 
 public interface INodeToTunPump {
@@ -7,8 +6,4 @@ public interface INodeToTunPump {
     // и доставляет пакет нужному получателю
     Task StartAsync (RuntimeContext ctx, CancellationToken ct);
     Task StopAsync ();
-
-    // Регистрация маршрута: src endpoint → локальный получатель
-    void RegisterRoute (UdpRoute route);
-    void RemoveRoute (IPEndPoint source);
 }
