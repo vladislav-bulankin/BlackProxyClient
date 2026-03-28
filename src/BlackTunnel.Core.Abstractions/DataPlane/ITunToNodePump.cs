@@ -1,7 +1,5 @@
-﻿using BlackTunnel.Domain.Runtime;
-
-namespace BlackTunnel.Core.Abstractions.DataPlane; 
+﻿namespace BlackTunnel.Core.Abstractions.DataPlane; 
 public interface ITunToNodePump {
-    Task StartAsync (RuntimeContext ctx, CancellationToken ct);
+    Task StartAsync (CancellationToken ct);
     Task StopAsync ();
 }

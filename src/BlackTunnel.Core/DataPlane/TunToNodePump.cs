@@ -27,7 +27,7 @@ public class TunToNodePump : ITunToNodePump {
 
     private CancellationTokenSource? cancellationToken;
     Task? tunLissen;
-    public async Task StartAsync (RuntimeContext ctx, CancellationToken ct) {
+    public async Task StartAsync (CancellationToken ct) {
         cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(ct);
         var winDivertObj = new WinDivertObject(settings.TcpProxyPort);
 
@@ -68,9 +68,9 @@ public class TunToNodePump : ITunToNodePump {
             if (!WinDivert.WinDivertRecv(hendl, winDivertObj.buffer, ref winDivAddr, ref recvLen)) {
                 throw new Exception();
             }
-            var parseRes = WinDivert
+            var p = WinDivert
                 .WinDivertHelperParsePacket(winDivertObj.buffer, recvLen);
-            if (parseRes is null || parseRes.PacketPayloadLength == 0) {
+            if (p is null || p.PacketPayloadLength == 0) {
                 WinDivert
                     .WinDivertSend(hendl, winDivertObj.buffer, recvLen, ref winDivAddr);
                 continue;
@@ -78,24 +78,24 @@ public class TunToNodePump : ITunToNodePump {
             unsafe {
                 bool modified = false;
                 string dstAddr = string.Empty;
-                if (parseRes.IPv4Header != null) {
-                    dstAddr = parseRes.IPv4Header->DstAddr.ToString();
-                    parseRes.IPv4Header->DstAddr = IPAddress.Loopback;
+                if (p.IPv4Header != null) {
+                    dstAddr = p.IPv4Header->DstAddr.ToString();
+                    p.IPv4Header->DstAddr = IPAddress.Loopback;
                     modified = true;
                 }
                 if (modified) {
-                    if (parseRes.TcpHeader != null) {
+                    if (p.TcpHeader != null) {
                         connectionManager
                             .AddTсpRoute(
-                                parseRes.TcpHeader->SrcPort,
-                                (dstAddr, parseRes.TcpHeader->DstPort));
-                        parseRes.TcpHeader->DstPort = settings.TcpProxyPort;
-                    } else if (parseRes.UdpHeader != null) {
+                                p.TcpHeader->SrcPort,
+                                (dstAddr, p.TcpHeader->DstPort));
+                        p.TcpHeader->DstPort = settings.TcpProxyPort;
+                    } else if (p.UdpHeader != null) {
                         connectionManager.AddUdpRoute(
-                                parseRes.UdpHeader->SrcPort,
-                                (dstAddr, parseRes.UdpHeader->DstPort)
+                                p.UdpHeader->SrcPort,
+                                (dstAddr, p.UdpHeader->DstPort)
                             );
-                        parseRes.UdpHeader->DstPort = settings.UdpProxyPort;
+                        p.UdpHeader->DstPort = settings.UdpProxyPort;
                     }
                     WinDivert
                         .WinDivertHelperCalcChecksums(winDivertObj.buffer, recvLen, ref winDivAddr, 0);

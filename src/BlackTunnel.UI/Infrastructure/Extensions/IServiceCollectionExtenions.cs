@@ -19,6 +19,8 @@ using Microsoft.Extensions.Hosting;
 namespace BlackTunnel.UI.Extensions; 
 public static class IServiceCollectionExtenions {
     public static void InjectAll (this IServiceCollection services) {
+        services.AddSingleton<ITcpTunnelHandler, TcpTunnelHandler>();
+        services.AddSingleton<IUdpTunnelHandler,  UdpTunnelHandler>();
         services.AddSingleton<IConnectionHealthSink,  ConnectionHealthSink>();
         services.AddSingleton<ICredentialStore, CredentialStore>();
         services.AddSingleton<IAuthController, AuthController>();
