@@ -3,5 +3,7 @@ public enum ConnectionLostReason {
     KeepaliveTimeout,
     TransportError,
     RemoteClosed,
-    UserClosed
+    UserClosed,
+    AuthFailed,
+    NegotiationFailed
 }
