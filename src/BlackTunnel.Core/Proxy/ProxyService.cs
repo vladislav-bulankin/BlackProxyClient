@@ -9,7 +9,7 @@ public class ProxyService : IProxyService {
 
     public event EventHandler<ConnectionState> StateChanged;
 
-    public Task<RuntimeContext> ConnectAsync (string host, int port, CancellationToken ct) {
+    public Task<SessionContext> ConnectAsync (string host, int port, CancellationToken ct) {
         throw new NotImplementedException();
     }
 

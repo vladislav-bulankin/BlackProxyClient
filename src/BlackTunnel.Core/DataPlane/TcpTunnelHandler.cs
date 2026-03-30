@@ -15,7 +15,7 @@ public class TcpTunnelHandler : ITcpTunnelHandler {
     private readonly IMuxConnection muxConnection;
     private TcpListener listener;
     private bool isInitialized;
-    private RuntimeContext context;
+    private SessionContext context;
     public TcpTunnelHandler (
             IConnectionManager connectionManager,
             IConnectionHealthSink connectionHealthSink,
@@ -32,7 +32,7 @@ public class TcpTunnelHandler : ITcpTunnelHandler {
         }
     }
 
-    public async Task StartAsync (RuntimeContext context, CancellationToken ct) {
+    public async Task StartAsync (SessionContext context, CancellationToken ct) {
         if (!isInitialized) { return; }
         this.context = context;
         listener.Start();

@@ -27,7 +27,7 @@ public class NodeToTunPump : INodeToTunPump {
         this.settings = options.Value;
     }
 
-    public async Task StartAsync (RuntimeContext ctx, CancellationToken ct) {
+    public async Task StartAsync (SessionContext ctx, CancellationToken ct) {
         cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         var winDivertObj = new WinDivertObject(settings.TcpProxyPort);
 

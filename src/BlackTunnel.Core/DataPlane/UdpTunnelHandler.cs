@@ -13,7 +13,7 @@ public class UdpTunnelHandler : IUdpTunnelHandler {
     private UdpClient? listener;           // слушает от WinDivert / приложения
     private UdpClient? relayClient;        // постоянное соединение к Node UDP-relay
     private bool isInitialized;
-    private RuntimeContext? context;
+    private SessionContext? context;
     private readonly IConnectionHealthSink connectionHealthSink;
     private readonly IConnectionManager connectionManager;
 
@@ -33,7 +33,7 @@ public class UdpTunnelHandler : IUdpTunnelHandler {
         isInitialized = true;
     }
 
-    public async Task StartAsync (RuntimeContext context, CancellationToken ct) {
+    public async Task StartAsync (SessionContext context, CancellationToken ct) {
         if (!isInitialized || listener is null) { return; }
         this.context = context;
         // Запускаем background receiver ответов от relay
@@ -65,7 +65,7 @@ public class UdpTunnelHandler : IUdpTunnelHandler {
         try {
             var route = ResolveOriginalDst(received);
             var wrapped = WrapWithSocks5Header(received.Buffer, route.RemoteEndpoint!);
-            await relayClient!.SendAsync(wrapped, context.NodeHost!, context.UdpRelayPort, ct);
+            await relayClient!.SendAsync(wrapped, context.Node.NodeHost!, context.UdpRelayPort, ct);
         } catch (Exception) {
             connectionHealthSink.OnConnectionLost(ConnectionLostReason.TransportError, ct);
         }

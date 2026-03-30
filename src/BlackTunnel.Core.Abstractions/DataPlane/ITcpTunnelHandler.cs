@@ -3,5 +3,5 @@
 namespace BlackTunnel.Core.Abstractions.DataPlane; 
 public interface ITcpTunnelHandler {
     void Initialize (int tcpProxyPort);
-    Task StartAsync (RuntimeContext context, CancellationToken ct);
+    Task StartAsync (SessionContext context, CancellationToken ct);
 }

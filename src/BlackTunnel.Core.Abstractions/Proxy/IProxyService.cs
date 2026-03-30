@@ -3,7 +3,7 @@ using BlackTunnel.Domain.Runtime;
 
 namespace BlackTunnel.Core.Abstractions.Proxy; 
 public interface IProxyService {
-    Task<RuntimeContext> ConnectAsync 
+    Task<SessionContext> ConnectAsync 
         (string host, int port, CancellationToken ct);
     Task DisconnectAsync ();
     ConnectionState State { get; }

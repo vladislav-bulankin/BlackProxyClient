@@ -1,0 +1,10 @@
+﻿using BlackTunnel.Domain.Entities;
+using BlackTunnel.Domain.Enums;
+
+namespace BlackTunnel.Domain.Runtime; 
+public class SessionContext {
+    public int UdpRelayPort { get; set; }// ← заполняется после UDP ASSOCIATE
+    public string? ConnectionToken { get; set; }
+    public ConnectionState ConState { get; set; }
+    public Node? Node { get; set; }
+}

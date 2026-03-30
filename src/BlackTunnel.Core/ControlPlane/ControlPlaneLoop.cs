@@ -30,15 +30,15 @@ public class ControlPlaneLoop : IControlPlaneLoop {
     }
 
     public async Task RunAsync 
-            (RuntimeContext context, CancellationToken cancellationToken) {
+            (SessionContext context, CancellationToken cancellationToken) {
         var pingTask = PingAsync(context, cancellationToken);
         var keepAliveTask = KeepAliveLoop(context, cancellationToken);
         await Task.WhenAll(pingTask, keepAliveTask);
     }
 
     private async Task KeepAliveLoop
-            (RuntimeContext context, CancellationToken cancellationToken) {
-        using TcpClient tcpClient = new(context.NodeHost, context.NodePort);
+            (SessionContext context, CancellationToken cancellationToken) {
+        using TcpClient tcpClient = new(context.Node.NodeHost, context.Node.NodePort);
         while (!cancellationToken.IsCancellationRequested) {
             try {
                 await tcpClient
@@ -54,12 +54,12 @@ public class ControlPlaneLoop : IControlPlaneLoop {
     }
 
     private async Task PingAsync
-            (RuntimeContext context, CancellationToken cancellationToken) {
+            (SessionContext context, CancellationToken cancellationToken) {
         var ping = new Ping();
         while (!cancellationToken.IsCancellationRequested) {
             try {
                 var startTime = DateTime.Now;
-                ping.SendAsync(context.NodeHost, cancellationToken);
+                ping.SendAsync(context.Node.NodeHost, cancellationToken);
                 currentPing = DateTime.Now - startTime;
                 await Task.Delay(TimeSpan.FromSeconds(30));
             } catch {

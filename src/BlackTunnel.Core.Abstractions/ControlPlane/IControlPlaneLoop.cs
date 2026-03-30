@@ -2,5 +2,5 @@
 
 namespace BlackTunnel.Core.Abstractions.ControlPlane; 
 public interface IControlPlaneLoop {
-    Task RunAsync(RuntimeContext context, CancellationToken cancellationToken);
+    Task RunAsync(SessionContext context, CancellationToken cancellationToken);
 }

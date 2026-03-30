@@ -19,9 +19,9 @@ public class MuxConnection : IMuxConnection, IAsyncDisposable {
     private NetworkStream? stream;
     private TcpClient? socket;
     private uint nextStreamId = 1;
-    public async Task ConnectAsync (RuntimeContext ctx, CancellationToken ct) {
+    public async Task ConnectAsync (SessionContext ctx, CancellationToken ct) {
         var socket = new TcpClient { NoDelay = true };
-        await socket.ConnectAsync(ctx.NodeHost!, ctx.NodePort, ct);
+        await socket.ConnectAsync(ctx.Node.NodeHost!, ctx.Node.NodePort, ct);
         stream = socket.GetStream();
 
         // Авторизуемся
