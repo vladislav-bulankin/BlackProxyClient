@@ -34,7 +34,6 @@ public class TunToNodePump : ITunToNodePump {
         if (!CreateHandle(winDivertObj.outboundFilter, out var hendl)){
             throw new InvalidOperationException("Не удалось открыть WinDivert хэндл");
         }
-
         var lostReason = ConnectionLostReason.UserClosed;
         try {
             tunLissen = Task.Run(

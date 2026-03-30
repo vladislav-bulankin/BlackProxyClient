@@ -1,6 +1,7 @@
 ﻿using BlackTunnel.Core.Abstractions.ControlPlane;
 using BlackTunnel.Core.Abstractions.DataPlane;
 using BlackTunnel.Core.Abstractions.Managers;
+using BlackTunnel.Core.Managers.Models;
 using BlackTunnel.Domain.Enums;
 using BlackTunnel.Domain.Exceptions;
 using BlackTunnel.Domain.Runtime;
@@ -14,13 +15,16 @@ public class UdpTunnelHandler : IUdpTunnelHandler {
     private RuntimeContext context;
     private readonly IConnectionHealthSink connectionHealthSink;
     private readonly IConnectionManager connectionManager;
+    private readonly IMuxConnection muxConnection;
     private short retryCounter = 0;
     private short currentRetry = 5;
     public UdpTunnelHandler (
             IConnectionHealthSink connectionHealthSink,
-            IConnectionManager connectionManager) {
+            IConnectionManager connectionManager,
+            IMuxConnection muxConnection) {
         this.connectionHealthSink = connectionHealthSink;
         this.connectionManager = connectionManager;
+        this.muxConnection = muxConnection;
     }
     public async Task StartListenAsync (RuntimeContext context, CancellationToken ct) {
         if (!isInitialized) {
@@ -109,16 +113,5 @@ public class UdpTunnelHandler : IUdpTunnelHandler {
         if (packet[3] != 0x01)
             return null; // только IPv4
         return packet[10..];                // только данные
-    }
-
-    private UdpClient Connection(CancellationToken ct) {
-        var socket = new UdpClient();
-        try {
-            socket.Connect(context.NodeHost, context.NodePort);
-            return socket;
-        } catch {
-            socket.Dispose();
-            throw new ProxyNegotiateException($"Не удалось подключиться к узлу");
-        }
     }
 }
