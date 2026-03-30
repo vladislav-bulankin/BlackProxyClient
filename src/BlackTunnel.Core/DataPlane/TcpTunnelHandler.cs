@@ -75,10 +75,9 @@ public class TcpTunnelHandler : ITcpTunnelHandler {
                 var originalDst = ResolveOriginalDst(client);
                 var muxStream = await muxConnection.OpenStreamAsync(originalDst, ct);
                 var clientStream = client.GetStream();
-                await Task.WhenAny(
-                    clientStream.CopyToAsync(muxStream, ct),
-                    muxStream.WriteAsync(clientStream, ct)
-                );
+                var toMux = PumpClientToMuxAsync(clientStream, muxStream, ct);
+                var fromMux = PumpMuxToClientAsync(muxStream, clientStream, ct);
+                await Task.WhenAll(toMux, fromMux);
                 await muxStream.CloseAsync(ct);
             } catch (ProxyAuthException) {
                 connectionHealthSink.OnConnectionLost(
@@ -100,5 +99,30 @@ public class TcpTunnelHandler : ITcpTunnelHandler {
         return connectionManager.GetOriginalTcpDst((ushort)srcEndPoint.Port)
             ?? throw new ProxyNegotiateException(
                 $"Маршрут не найден для порта {srcEndPoint.Port}");
+    }
+
+    private static async Task PumpClientToMuxAsync (
+    NetworkStream clientStream,
+    MuxStream muxStream,
+    CancellationToken ct) {
+        var buffer = new byte[16 * 1024];
+        while (!ct.IsCancellationRequested) {
+            var bytesRead = await clientStream.ReadAsync(buffer.AsMemory(), ct);
+            if (bytesRead == 0) { break; } 
+            await muxStream.WriteAsync(buffer.AsSpan(0, bytesRead).ToArray(), ct);
+        }
+    }
+
+    private static async Task PumpMuxToClientAsync (
+        MuxStream muxStream,
+        NetworkStream clientStream,
+        CancellationToken ct) {
+        while (!ct.IsCancellationRequested) {
+            try {
+                var data = await muxStream.ReadAsync(ct);
+                if (data.Length == 0) { break; }
+                await clientStream.WriteAsync(data, ct);
+            } catch (Exception) when (ct.IsCancellationRequested) { break; }
+        }
     }
 }
