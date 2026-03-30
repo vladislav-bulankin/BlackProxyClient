@@ -15,7 +15,8 @@ public class TunToNodePump : ITunToNodePump {
     private readonly IConnectionHealthSink healthSink;
     private readonly GeneralSettings settings;
     private readonly IConnectionManager connectionManager;
-
+    private CancellationTokenSource? cancellationToken;
+    Task? tunLissen;
     public TunToNodePump (
             IConnectionHealthSink healthSink,
             IOptions<GeneralSettings> options,
@@ -25,8 +26,6 @@ public class TunToNodePump : ITunToNodePump {
         this.connectionManager = connectionManager;
     }
 
-    private CancellationTokenSource? cancellationToken;
-    Task? tunLissen;
     public async Task StartAsync (CancellationToken ct) {
         cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(ct);
         var winDivertObj = new WinDivertObject(settings.TcpProxyPort);
