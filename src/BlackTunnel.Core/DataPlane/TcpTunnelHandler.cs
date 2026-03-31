@@ -1,6 +1,5 @@
 ﻿using BlackTunnel.Core.Abstractions.ControlPlane;
 using BlackTunnel.Core.Abstractions.DataPlane;
-using BlackTunnel.Core.Abstractions.Managers;
 using BlackTunnel.Core.Exceptions;
 using BlackTunnel.Core.Managers.Models;
 using BlackTunnel.Domain.Enums;
@@ -10,17 +9,17 @@ using System.Net.Sockets;
 
 namespace BlackTunnel.Core.DataPlane; 
 public class TcpTunnelHandler : ITcpTunnelHandler {
-    private readonly IConnectionManager connectionManager;
+    private readonly IRouteTable routeTable;
     private readonly IConnectionHealthSink connectionHealthSink;
     private readonly IMuxConnection muxConnection;
     private TcpListener listener;
     private bool isInitialized;
     private SessionContext context;
     public TcpTunnelHandler (
-            IConnectionManager connectionManager,
+            IRouteTable routeTable,
             IConnectionHealthSink connectionHealthSink,
             IMuxConnection muxConnection) {
-        this.connectionManager = connectionManager;
+        this.routeTable = routeTable;
         this.connectionHealthSink = connectionHealthSink;
         this.muxConnection = muxConnection;
     }
@@ -96,8 +95,8 @@ public class TcpTunnelHandler : ITcpTunnelHandler {
         var srcEndPoint = (IPEndPoint?)client.Client.RemoteEndPoint
             ?? throw new ProxyNegotiateException("No RemoteEndPoint");
 
-        return connectionManager.GetOriginalTcpDst((ushort)srcEndPoint.Port)
-            ?? throw new ProxyNegotiateException(
+        _ = routeTable.TryGetOriginalTcpDest((ushort)srcEndPoint.Port, out var dest);
+            return dest ?? throw new ProxyNegotiateException(
                 $"Маршрут не найден для порта {srcEndPoint.Port}");
     }
 

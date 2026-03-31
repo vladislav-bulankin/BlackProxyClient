@@ -1,8 +1,9 @@
-﻿using System.Collections.Concurrent;
+﻿using BlackTunnel.Domain.Runtime;
+using System.Collections.Concurrent;
 using System.Net;
 
-namespace BlackTunnel.Domain.Runtime; 
-public class RouteTable {
+namespace BlackTunnel.Core.Managers.Models;
+public class RouteTable : IRouteTable {
 
     private readonly ConcurrentDictionary<ushort, UdpRoute> udpRoutes = new();
     private readonly ConcurrentDictionary<ushort, IPEndPoint> tcpRoutes = new();

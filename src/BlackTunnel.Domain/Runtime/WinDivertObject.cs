@@ -12,7 +12,7 @@ public class WinDivertObject {
         and not (udp and (udp.DstPort == 137 or udp.DstPort == 5355))
         and ip.DstAddr < 169.254.0.0 or ip.DstAddr >= 169.255.0.0
     """;
-    private string inboundUdpFilter = """
+    public string inboundUdpFilter = """
     inbound
     and udp
     and !loopback

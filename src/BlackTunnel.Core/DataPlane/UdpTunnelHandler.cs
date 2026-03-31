@@ -1,6 +1,6 @@
 ﻿using BlackTunnel.Core.Abstractions.ControlPlane;
 using BlackTunnel.Core.Abstractions.DataPlane;
-using BlackTunnel.Core.Abstractions.Managers;
+using BlackTunnel.Core.Managers.Models;
 using BlackTunnel.Domain.Enums;
 using BlackTunnel.Domain.Exceptions;
 using BlackTunnel.Domain.Runtime;
@@ -15,16 +15,16 @@ public class UdpTunnelHandler : IUdpTunnelHandler {
     private bool isInitialized;
     private SessionContext? context;
     private readonly IConnectionHealthSink connectionHealthSink;
-    private readonly IConnectionManager connectionManager;
+    private readonly IRouteTable routeTable;
 
     private CancellationTokenSource? receiverCts;
     private Task? receiverTask;
 
     public UdpTunnelHandler (
         IConnectionHealthSink connectionHealthSink,
-        IConnectionManager connectionManager) {
+        IRouteTable routeTable) {
         this.connectionHealthSink = connectionHealthSink;
-        this.connectionManager = connectionManager;
+        this.routeTable = routeTable;
     }
 
     public void Initialize (int udpProxyPort) {
@@ -81,9 +81,10 @@ public class UdpTunnelHandler : IUdpTunnelHandler {
                 var response = await relayClient.ReceiveAsync(ct);
                 var unwrapped = UnwrapSocks5Header(response.Buffer);
                 if (unwrapped is null) { continue; }
-                var route = connectionManager.GetUdpRoute((ushort)response.RemoteEndPoint.Port);
+                //(ushort)response.RemoteEndPoint.Port
+                routeTable.TryGetUdpRoute((ushort)unwrapped.Value.Source.Port, out var route);
                 if (route?.LocalEndpoint is not null) {
-                    await listener!.SendAsync(unwrapped, route.LocalEndpoint, ct);
+                    await listener!.SendAsync(unwrapped.Value.Data, route.LocalEndpoint, ct);
                 }
             } catch (OperationCanceledException) {
                 break;
@@ -96,8 +97,8 @@ public class UdpTunnelHandler : IUdpTunnelHandler {
 
     private UdpRoute ResolveOriginalDst (UdpReceiveResult received) {
         var srcPort = (ushort)received.RemoteEndPoint.Port;
-        return connectionManager.GetUdpRoute(srcPort)
-            ?? throw new ProxyNegotiateException($"Маршрут не найден для порта {srcPort}");
+        routeTable.TryGetUdpRoute(srcPort, out var route);
+        return route ?? throw new ProxyNegotiateException($"No route for port {srcPort}");
     }
 
     private byte[] WrapWithSocks5Header (byte[] data, IPEndPoint dst) {
@@ -118,10 +119,13 @@ public class UdpTunnelHandler : IUdpTunnelHandler {
         return result;
     }
 
-    private byte[]? UnwrapSocks5Header (byte[] packet) {
+    private (byte[] Data, IPEndPoint Source)? UnwrapSocks5Header (byte[] packet) {
         if (packet.Length < 10 || packet[3] != 0x01) { return null; }
-        // Пропускаем: RSV(2) + FRAG(1) + ATYP(1) + IP(4) + PORT(2) = 10 байт
-        return packet[10..];
+        var srcIp = new IPAddress(packet[4..8]);
+        var srcPort = (packet[8] << 8) | packet[9];
+        var source = new IPEndPoint(srcIp, srcPort);
+        var data = packet[10..];
+        return (data, source);
     }
 
     public void Dispose () {
