@@ -31,21 +31,14 @@ public class ConnectionHealthSink : IConnectionHealthSink {
             (ConnectionLostReason reason, CancellationToken ct) {
         if (State == ConnectionState.Connected || State == ConnectionState.Connecting) { return; }
         LastDisconnectReason = reason;
-        State = ConnectionState.Disconnected;
-        var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-        cts.Cancel();
-        switch (reason) {
-            case ConnectionLostReason.KeepaliveTimeout:
-            case ConnectionLostReason.TransportError:
-                State = ConnectionState.Disconnected; 
-            break;
-            case ConnectionLostReason.RemoteClosed:
-            case ConnectionLostReason.UserClosed:
-            case ConnectionLostReason.AuthFailed:
-            case ConnectionLostReason.NegotiationFailed:
-                State = ConnectionState.Error;
-            break;
-        }
-        
+        State = reason switch {
+            ConnectionLostReason.KeepaliveTimeout => ConnectionState.Disconnected,
+            ConnectionLostReason.TransportError => ConnectionState.Disconnected,
+            ConnectionLostReason.RemoteClosed => ConnectionState.Error,
+            ConnectionLostReason.UserClosed => ConnectionState.Error,
+            ConnectionLostReason.AuthFailed => ConnectionState.Error,
+            ConnectionLostReason.NegotiationFailed => ConnectionState.Error,
+            _ => ConnectionState.Error
+        };
     }
 }

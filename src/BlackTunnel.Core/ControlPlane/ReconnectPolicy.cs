@@ -37,16 +37,26 @@ public class ReconnectPolicy : IHostedService {
     }
 
     private void OnStateChanged (ConnectionState state) {
-        if (state == ConnectionState.Connected 
+        if (state == ConnectionState.Connected
                 || state == ConnectionState.Connecting) {
             return;
         }
-        var reason = healthSink.LastDisconnectReason;
-        if (retryReason.Contains(reason)) {
-            _ = Task.Run( () => ReconnectAsync(reason));
-        } else {
-            _ = Task.Run(() => FullDisconnectAsync(reason));
+
+        if (Interlocked.Exchange(ref retryCount, 1) == 1) {
+            return;
         }
+
+        _ = Task.Run(async () => {
+            try {
+                var reason = healthSink.LastDisconnectReason;
+                if (retryReason.Contains(reason))
+                    await ReconnectAsync(reason);
+                else
+                    await FullDisconnectAsync(reason);
+            } finally {
+                Interlocked.Exchange(ref retryCount, 0);
+            }
+        });
     }
 
     private async Task ReconnectAsync (ConnectionLostReason reason) {
