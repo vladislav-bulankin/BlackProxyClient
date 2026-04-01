@@ -39,7 +39,6 @@ public class UdpTunnelHandler : IUdpTunnelHandler, IDisposable {
         // Запускаем background receiver ответов от relay
         receiverCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         receiverTask = RunRelayReceiverAsync(receiverCts.Token);
-        receiverTask.Start();
         await AcceptLoopAsync(ct);
     }
 
@@ -68,8 +67,7 @@ public class UdpTunnelHandler : IUdpTunnelHandler, IDisposable {
 
     private async Task HandleUdpAsync (UdpReceiveResult received, CancellationToken ct) {
         if (context?.UdpRelayPort == 0) {
-            await Task.Delay(300, ct); // ждём, пока OpenUdpAssociateAsync отработает
-            if (context.UdpRelayPort == 0) { return; }   
+            await context.UdpPortReady.Task.WaitAsync(ct);  
         }
         try {
             var route = ResolveOriginalDst(received);

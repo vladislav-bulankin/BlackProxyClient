@@ -15,7 +15,7 @@ public class ConnectionManager : IConnectionManager {
     private readonly IUdpTunnelHandler udpTunnel;
     private readonly IConnectionHealthSink healthSink;
     private readonly GeneralSettings settings;
-    private SessionContext session;
+    private volatile SessionContext session;
     public ConnectionManager (
             ITunToNodePump tunToNode, 
             INodeToTunPump nodeToTun, 
@@ -54,10 +54,12 @@ public class ConnectionManager : IConnectionManager {
         await nodeToTun.StopAsync();
         await udpTunnel.StopAsync();
         await tcpTunnel.StopAsync();
-        healthSink
+        if(session is not null) {
+            healthSink
             .OnConnectionLost(ConnectionLostReason.UserClosed, session.Cts.Token);
-        session.Cts.Cancel();
-        session = null;
+            session.Cts.Cancel();
+            session = null;
+        }
     }
 
     public async Task ReconnectAsync () {
@@ -71,6 +73,7 @@ public class ConnectionManager : IConnectionManager {
                 .OnConnectionLost(ConnectionLostReason.TransportError, session.Cts.Token);
         }
         try {
+            
             await ConnectAsync(session);
         } catch {
             healthSink

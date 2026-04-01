@@ -39,7 +39,6 @@ public class TcpTunnelHandler : ITcpTunnelHandler, IDisposable {
         cts = CancellationTokenSource.CreateLinkedTokenSource (ct);
         listener.Start();
         udpAssociateTask = Task.Run(() => OpenUdpAssociateAsync(ct), ct);
-        udpAssociateTask.Start();
         await AcceptLoopAsync(ct);
     }
 
@@ -58,6 +57,7 @@ public class TcpTunnelHandler : ITcpTunnelHandler, IDisposable {
                 new IPEndPoint(IPAddress.Any, 0), ct);
             var response = await udpAssoc.ReadAsync(ct);
             context.UdpRelayPort = (response[0] << 8) | response[1];
+            context.UdpPortReady.TrySetResult(((response[0] << 8) | response[1]));
         } catch {
             connectionHealthSink.OnConnectionLost(
                 ConnectionLostReason.NegotiationFailed, ct);
@@ -121,7 +121,7 @@ public class TcpTunnelHandler : ITcpTunnelHandler, IDisposable {
         while (!ct.IsCancellationRequested) {
             var bytesRead = await clientStream.ReadAsync(buffer.AsMemory(), ct);
             if (bytesRead == 0) { break; } 
-            await muxStream.WriteAsync(buffer.AsSpan(0, bytesRead).ToArray(), ct);
+            await muxStream.WriteAsync(buffer.AsMemory(0, bytesRead).ToArray(), ct);
         }
     }
 
