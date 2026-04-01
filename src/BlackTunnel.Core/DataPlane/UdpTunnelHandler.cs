@@ -9,7 +9,7 @@ using System.Net.Sockets;
 
 namespace BlackTunnel.Core.DataPlane;
 
-public class UdpTunnelHandler : IUdpTunnelHandler {
+public class UdpTunnelHandler : IUdpTunnelHandler, IDisposable {
     private UdpClient? listener;           // слушает от WinDivert / приложения
     private UdpClient? relayClient;        // постоянное соединение к Node UDP-relay
     private bool isInitialized;
@@ -39,8 +39,17 @@ public class UdpTunnelHandler : IUdpTunnelHandler {
         // Запускаем background receiver ответов от relay
         receiverCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         receiverTask = RunRelayReceiverAsync(receiverCts.Token);
-
+        receiverTask.Start();
         await AcceptLoopAsync(ct);
+    }
+
+    public async Task StopAsync () {
+        if (!isInitialized) { return; }
+        receiverCts?.Cancel();
+        if (receiverTask is not null) {
+            await receiverTask;
+        }
+        this.Dispose();
     }
 
     private async Task AcceptLoopAsync (CancellationToken ct) {
@@ -133,5 +142,7 @@ public class UdpTunnelHandler : IUdpTunnelHandler {
         receiverTask?.Wait(1000);
         listener?.Close();
         relayClient?.Close();
+        listener?.Dispose();
+        relayClient?.Dispose();
     }
 }

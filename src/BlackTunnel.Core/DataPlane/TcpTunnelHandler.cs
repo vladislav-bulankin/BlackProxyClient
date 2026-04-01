@@ -8,13 +8,15 @@ using System.Net;
 using System.Net.Sockets;
 
 namespace BlackTunnel.Core.DataPlane; 
-public class TcpTunnelHandler : ITcpTunnelHandler {
+public class TcpTunnelHandler : ITcpTunnelHandler, IDisposable {
     private readonly IRouteTable routeTable;
     private readonly IConnectionHealthSink connectionHealthSink;
     private readonly IMuxConnection muxConnection;
     private TcpListener listener;
     private bool isInitialized;
     private SessionContext context;
+    private Task udpAssociateTask;
+    private CancellationTokenSource? cts;
     public TcpTunnelHandler (
             IRouteTable routeTable,
             IConnectionHealthSink connectionHealthSink,
@@ -34,9 +36,20 @@ public class TcpTunnelHandler : ITcpTunnelHandler {
     public async Task StartAsync (SessionContext context, CancellationToken ct) {
         if (!isInitialized) { return; }
         this.context = context;
+        cts = CancellationTokenSource.CreateLinkedTokenSource (ct);
         listener.Start();
-        _ = Task.Run(() => OpenUdpAssociateAsync(ct), ct);
+        udpAssociateTask = Task.Run(() => OpenUdpAssociateAsync(ct), ct);
+        udpAssociateTask.Start();
         await AcceptLoopAsync(ct);
+    }
+
+    public async Task StopAsync () {
+        if (!isInitialized) { return; }
+        cts?.Cancel();
+        if(udpAssociateTask is not null) {
+            await udpAssociateTask;
+        }
+        this.Dispose();
     }
 
     private async Task OpenUdpAssociateAsync (CancellationToken ct) {
@@ -123,5 +136,12 @@ public class TcpTunnelHandler : ITcpTunnelHandler {
                 await clientStream.WriteAsync(data, ct);
             } catch (Exception) when (ct.IsCancellationRequested) { break; }
         }
+    }
+
+    public void Dispose () {
+        cts?.Cancel();
+        udpAssociateTask?.Wait(1000);
+        listener.Stop();
+        listener.Dispose();
     }
 }

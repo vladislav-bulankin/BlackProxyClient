@@ -3,7 +3,6 @@ using BlackTunnel.UI.Infrastructure.Services.Abstractions;
 using BlackTunnel.UI.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System.Runtime.InteropServices.JavaScript;
 using System.Windows;
 
 namespace BlackTunnel.UI; 

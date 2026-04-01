@@ -1,6 +1,5 @@
 ﻿using BlackTunnel.Core.Abstractions.ControlPlane;
 using BlackTunnel.Domain.Enums;
-using BlackTunnel.Domain.Exceptions;
 
 namespace BlackTunnel.Core.ControlPlane;
 
@@ -22,7 +21,7 @@ public class ConnectionHealthSink : IConnectionHealthSink {
         set {
             if(state == value) {  return; }
             state = value;
-            StateChanged.Invoke(value);
+            StateChanged?.Invoke(value);
         }
     }
 
@@ -30,7 +29,7 @@ public class ConnectionHealthSink : IConnectionHealthSink {
 
     public void OnConnectionLost 
             (ConnectionLostReason reason, CancellationToken ct) {
-        if (State != ConnectionState.Connected || State != ConnectionState.Connecting) { return; }
+        if (State == ConnectionState.Connected || State == ConnectionState.Connecting) { return; }
         LastDisconnectReason = reason;
         State = ConnectionState.Disconnected;
         var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
@@ -38,10 +37,13 @@ public class ConnectionHealthSink : IConnectionHealthSink {
         switch (reason) {
             case ConnectionLostReason.KeepaliveTimeout:
             case ConnectionLostReason.TransportError:
-                throw new NetworkLostException(reason.ToString());
+                State = ConnectionState.Disconnected; 
+            break;
             case ConnectionLostReason.RemoteClosed:
             case ConnectionLostReason.UserClosed:
-                State = ConnectionState.Disconnected;
+            case ConnectionLostReason.AuthFailed:
+            case ConnectionLostReason.NegotiationFailed:
+                State = ConnectionState.Error;
             break;
         }
         

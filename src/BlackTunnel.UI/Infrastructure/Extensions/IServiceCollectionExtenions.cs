@@ -20,6 +20,7 @@ using Microsoft.Extensions.Hosting;
 namespace BlackTunnel.UI.Extensions; 
 public static class IServiceCollectionExtenions {
     public static void InjectAll (this IServiceCollection services) {
+        services.AddHostedService<ReconnectPolicy>();
         services.AddSingleton<IRouteTable, RouteTable>();
         services.AddSingleton<IClientAuthService,  ClientAuthService>();
         services.AddSingleton<IMuxConnection, MuxConnection>();
