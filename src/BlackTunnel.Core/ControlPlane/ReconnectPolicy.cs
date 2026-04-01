@@ -49,10 +49,11 @@ public class ReconnectPolicy : IHostedService {
         _ = Task.Run(async () => {
             try {
                 var reason = healthSink.LastDisconnectReason;
-                if (retryReason.Contains(reason))
+                if (retryReason.Contains(reason)) {
                     await ReconnectAsync(reason);
-                else
+                } else {
                     await FullDisconnectAsync(reason);
+                }
             } finally {
                 Interlocked.Exchange(ref retryCount, 0);
             }

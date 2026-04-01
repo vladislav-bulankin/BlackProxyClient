@@ -56,7 +56,7 @@ public class ConnectionManager : IConnectionManager {
         await tcpTunnel.StopAsync();
         if(session is not null) {
             healthSink
-            .OnConnectionLost(ConnectionLostReason.UserClosed, session.Cts.Token);
+                .OnConnectionLost(ConnectionLostReason.UserClosed, session.Cts.Token);
             session.Cts.Cancel();
             session = null;
         }
@@ -73,7 +73,6 @@ public class ConnectionManager : IConnectionManager {
                 .OnConnectionLost(ConnectionLostReason.TransportError, session.Cts.Token);
         }
         try {
-            
             await ConnectAsync(session);
         } catch {
             healthSink
