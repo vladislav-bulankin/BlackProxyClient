@@ -9,7 +9,5 @@ public class SessionContext {
     public string? ConnectionToken { get; set; }
     public ConnectionState ConState { get; set; }
     public Node? Node { get; set; }
-    public DateTime ConnectAt { get; set; }
-    public DateTime ExpirationAt { get; set; }
     public CancellationTokenSource? Cts { get; set; }
 }

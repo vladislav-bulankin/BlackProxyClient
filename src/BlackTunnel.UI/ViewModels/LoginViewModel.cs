@@ -95,8 +95,6 @@ public class LoginViewModel : INotifyPropertyChanged {
     private async Task ProcessingLoginRequest(LoginResponse response) {
         if (response is not null && response.IsSuccess 
                 && !string.IsNullOrEmpty(response.AccessToken)) {
-            await authController.SetCredentialsAsync(Username, Password);
-            authController.SetTokens(response.AccessToken!, response.RefreshToken!);
             navigationService.NavigateTo<ServersPage>();
         } else {
             ErrorMessage = response.Message ?? "Login failed. Please try again.";

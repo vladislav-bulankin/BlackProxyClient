@@ -1,4 +1,6 @@
 ﻿using BlackTunnel.Core.Abstractions;
+using BlackTunnel.Core.Abstractions.Auth;
+using BlackTunnel.Domain.Enums;
 using BlackTunnel.UI.Commands;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -10,7 +12,7 @@ namespace BlackTunnel.UI.ViewModels;
 
 public class ServersViewModel : INotifyPropertyChanged {
     public ObservableCollection<Server> Servers { get; } = new ObservableCollection<Server>();
-
+    private readonly IAuthController authController;
     private Server? selectedServer;
     private string connectionStatus = "Disconnected";
     private Brush statusColor = Brushes.Red;
@@ -44,6 +46,29 @@ public class ServersViewModel : INotifyPropertyChanged {
         set { connectionStatus = value; OnPropertyChanged(); }
     }
 
+    private string connectionError;
+    public string ConnectionError {
+        get {
+            return connectionError;
+        }
+        set {
+            if(connectionError == value) { return; }
+            connectionError = value;
+            OnPropertyChanged();
+        }
+    }
+
+    private ConnectionState connectionState;
+    public ConnectionState ConnectionState
+    {
+        get => connectionState;
+        set {
+            if (connectionState == value) { return; }
+            connectionState = value;
+            OnPropertyChanged();
+        }
+    }
+
     public Brush StatusColor
     {
         get => statusColor;
@@ -70,10 +95,11 @@ public class ServersViewModel : INotifyPropertyChanged {
 
     public ICommand ConnectCommand { get; }
 
-    public ServersViewModel () {
-        ConnectCommand = new RelayCommand(ExecuteConnect, CanConnect);
+    public ServersViewModel (IAuthController authController) {
+        ConnectCommand = new AsyncRelayCommand(ExecuteConnect, CanConnect);
         LoadFakeServers();
         SelectedServer = Servers.FirstOrDefault();
+        this.authController = authController;
     }
 
     private void LoadFakeServers () {
@@ -87,28 +113,41 @@ public class ServersViewModel : INotifyPropertyChanged {
     // Команда активна только если сервер выбран
     private bool CanConnect () => SelectedServer != null;
 
-    private void ExecuteConnect () {
+    private async Task ExecuteConnect () {
         if (ConnectionStatus == "Connected") {
+            await authController.DisConnectasync();
             ConnectionStatus = "Disconnected";
             StatusColor = Brushes.Red;
             ButtonText = "CONNECT";
             ButtonColor = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10B981"));
             CurrentServerName = "Choose a server";
+            ConnectionState = ConnectionState.Disconnected;
+            ConnectionError = null;
         } else {
-            if (SelectedServer == null)
-                return;
-
+            if (SelectedServer == null) { return; }
+            ConnectionError = null;
             ConnectionStatus = "Connecting...";
             StatusColor = Brushes.Orange;
             ButtonText = "CANCEL";
-
-            Task.Delay(1200).ContinueWith(_ => {
+            ConnectionState = ConnectionState.Connecting;
+            var connectionResult = await authController
+                .ConnectAsync(SelectedServer.Host, SelectedServer.Port);
+            if (connectionResult.IsSuccess) {
+                ConnectionError = null;
                 ConnectionStatus = "Connected";
                 StatusColor = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#22C55E"));
                 ButtonText = "DISCONNECT";
                 ButtonColor = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#B91C1C"));
                 CurrentServerName = SelectedServer.Name;
-            }, TaskScheduler.FromCurrentSynchronizationContext());
+                ConnectionState = ConnectionState.Connected;
+            } else {
+                ConnectionStatus = "Disconnected";
+                StatusColor = Brushes.Red;
+                ButtonText = "CONNECT";
+                ButtonColor = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10B981"));
+                ConnectionError = connectionResult.Message;
+                ConnectionState = ConnectionState.Error;
+            }
         }
     }
 

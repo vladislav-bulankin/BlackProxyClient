@@ -6,5 +6,8 @@
     <Application.Resources>
         <converters:NullToCollapsedConverter x:Key="NullToCollapsedConverter" />
         <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
+        <converters:ConnectionStateToVisibilityConverter x:Key="ErrorVisibility" TargetState="Error"  />
+                                           
     </Application.Resources>
 </Application>

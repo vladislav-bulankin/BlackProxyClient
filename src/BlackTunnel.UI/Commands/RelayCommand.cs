@@ -10,6 +10,7 @@ public class RelayCommand : ICommand {
         this.canExecute = canExecute;
     }
 
+
     public event EventHandler? CanExecuteChanged
     {
         add => CommandManager.RequerySuggested += value;

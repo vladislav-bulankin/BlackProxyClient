@@ -31,7 +31,7 @@ public class NodeToTunPump : INodeToTunPump {
         cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         var winDivertObj = new WinDivertObject(settings.TcpProxyPort);
 
-        if (!CreateHandle(winDivertObj.outboundFilter, out var hendl)) {
+        if (!CreateHandle(winDivertObj.inboundUdpFilter, out var hendl)) {
             throw new InvalidOperationException("Не удалось открыть WinDivert хэндл");
         }
         pumpTask = Task.Run(

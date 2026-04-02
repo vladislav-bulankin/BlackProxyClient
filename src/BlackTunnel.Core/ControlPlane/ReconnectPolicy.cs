@@ -6,8 +6,8 @@ using Microsoft.Extensions.Hosting;
 
 namespace BlackTunnel.Core.ControlPlane; 
 public class ReconnectPolicy : IHostedService {
-    public byte maxRecconect { get; } = 5;
-    private byte retryCount = 0;
+    public int maxRecconect { get; } = 5;
+    private int retryCount = 0;
     private TimeSpan MaxBackOff = TimeSpan.FromSeconds(5);
     private CancellationTokenSource? retryCts;
     private readonly ConnectionLostReason[] retryReason = new[] {
