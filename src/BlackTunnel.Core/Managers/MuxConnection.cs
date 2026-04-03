@@ -21,7 +21,9 @@ public class MuxConnection : IMuxConnection, IAsyncDisposable {
     private uint nextStreamId = 1;
     public async Task ConnectAsync (SessionContext context, CancellationToken ct) {
         var socket = new TcpClient { NoDelay = true };
-        await socket.ConnectAsync(context.Node.NodeHost!, context.Node.NodePort, ct);
+        try {
+            await socket.ConnectAsync(context.Node.NodeHost!, context.Node.NodePort, ct);
+        } catch (Exception) { throw; }
         stream = socket.GetStream();
 
         // Авторизуемся
@@ -30,19 +32,21 @@ public class MuxConnection : IMuxConnection, IAsyncDisposable {
     }
 
     private async Task AuthenticateAsync (string token, CancellationToken ct) {
-        var tokenBytes = Encoding.UTF8.GetBytes(token);
-        await WriteFrameAsync(new () {
-            StreamId = 0,
-            Type = MuxFrameType.Auth,
-            Data = tokenBytes
-        }, ct);
-        var response = await ReadFrameAsync(ct);
-        if (response.Type == MuxFrameType.AuthErr) {
-            throw new ProxyAuthException(Encoding.UTF8.GetString(response.Data));
-        }
-        if (response.Type != MuxFrameType.AuthOk) {
-            throw new ProxyAuthException("Неожиданный ответ при авторизации");
-        }
+        try {
+            var tokenBytes = Encoding.UTF8.GetBytes(token);
+            await WriteFrameAsync(new() {
+                StreamId = 0,
+                Type = MuxFrameType.Auth,
+                Data = tokenBytes
+            }, ct);
+            var response = await ReadFrameAsync(ct);
+            if (response.Type == MuxFrameType.AuthErr) {
+                throw new ProxyAuthException(Encoding.UTF8.GetString(response.Data));
+            }
+            if (response.Type != MuxFrameType.AuthOk) {
+                throw new ProxyAuthException("Неожиданный ответ при авторизации");
+            }
+        }catch(Exception) { throw; }
     }
 
     //  Открытие нового стрима (на каждое TCP соединение приложения)
@@ -96,6 +100,18 @@ public class MuxConnection : IMuxConnection, IAsyncDisposable {
         }
     }
 
+    public async ValueTask DisposeAsync () {
+        foreach (var stream in streams.Values) {
+            stream.Close();
+        }
+        streams.Clear();
+        writeLock.Dispose();
+        if (stream != null) {
+            await stream.DisposeAsync();
+        }
+        socket?.Dispose();
+    }
+
     private async Task<MuxFrame> ReadFrameAsync (CancellationToken ct) {
         var header = new byte[9];
         await ReadExactAsync(header, 9, ct);
@@ -135,17 +151,5 @@ public class MuxConnection : IMuxConnection, IAsyncDisposable {
             }
             total += n;
         }
-    }
-
-    public async ValueTask DisposeAsync () {
-        foreach (var stream in streams.Values) {
-            stream.Close();
-        }
-        streams.Clear();
-        writeLock.Dispose();
-        if (stream != null) {
-            await stream.DisposeAsync();
-        }
-        socket?.Dispose();
     }
 }

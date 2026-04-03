@@ -10,4 +10,6 @@ public class SessionContext {
     public ConnectionState ConState { get; set; }
     public Node? Node { get; set; }
     public CancellationTokenSource? Cts { get; set; }
+    public void RenewCts () =>
+        Cts = new();
 }

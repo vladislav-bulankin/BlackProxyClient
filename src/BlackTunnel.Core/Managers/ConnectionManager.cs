@@ -1,6 +1,7 @@
 ﻿using BlackTunnel.Core.Abstractions.ControlPlane;
 using BlackTunnel.Core.Abstractions.DataPlane;
 using BlackTunnel.Core.Abstractions.Managers;
+using BlackTunnel.Core.Managers.Models;
 using BlackTunnel.Domain.Enums;
 using BlackTunnel.Domain.Runtime;
 using BlackTunnel.Domain.Settings;
@@ -13,70 +14,71 @@ public class ConnectionManager : IConnectionManager {
     private readonly INodeToTunPump nodeToTun;
     private readonly ITcpTunnelHandler tcpTunnel;
     private readonly IUdpTunnelHandler udpTunnel;
-    private readonly IConnectionHealthSink healthSink;
+    private readonly IMuxConnection muxConnection;
     private readonly GeneralSettings settings;
-    private volatile SessionContext session;
     public ConnectionManager (
             ITunToNodePump tunToNode, 
             INodeToTunPump nodeToTun, 
             ITcpTunnelHandler tcpTunnel, 
             IUdpTunnelHandler udpTunnel,
-            IConnectionHealthSink healthSink,
-            IOptions<GeneralSettings> options) {
+            IOptions<GeneralSettings> options,
+            IMuxConnection muxConnection) {
         this.tunToNode = tunToNode;
         this.nodeToTun = nodeToTun;
         this.tcpTunnel = tcpTunnel;
         this.udpTunnel = udpTunnel;
-        this.healthSink = healthSink;
         this.settings = options.Value;
+        this.muxConnection = muxConnection;
     }
 
-    public async Task ConnectAsync (SessionContext context) {
-        if(context is null) { 
-            healthSink
-                .OnConnectionLost(
-                    ConnectionLostReason.RemoteClosed, 
-                    CancellationToken.None); 
-            return; 
+    public async Task ConnectAsync (SessionContext session) {
+        if(session is null) { 
+            throw new ArgumentNullException("not authorieze");
         }
-        await tunToNode.StartAsync(context?.Cts?.Token ?? CancellationToken.None);
-        await nodeToTun.StartAsync(context, context?.Cts?.Token ?? CancellationToken.None);
-        tcpTunnel.Initialize(settings.TcpProxyPort);
-        await tcpTunnel.StartAsync(context, context.Cts.Token);
-        await Task.Delay(TimeSpan.FromSeconds(2));
-        udpTunnel.Initialize(settings.UdpProxyPort);
-        await udpTunnel.StartAsync(context, context.Cts.Token);
-        session = context;
-    }
-
-    public async Task DisconnectAsync () {
-        await tunToNode.StopAsync();
-        await nodeToTun.StopAsync();
-        await udpTunnel.StopAsync();
-        await tcpTunnel.StopAsync();
-        if(session is not null) {
-            healthSink
-                .OnConnectionLost(ConnectionLostReason.UserClosed, session.Cts.Token);
-            session.Cts.Cancel();
-            session = null;
+        try {
+            await tunToNode.StartAsync(session?.Cts?.Token ?? CancellationToken.None);
+            await nodeToTun.StartAsync(session, session?.Cts?.Token ?? CancellationToken.None);
+            tcpTunnel.Initialize(settings.TcpProxyPort);
+            _ = Task.Run(() => tcpTunnel.StartAsync(session, session.Cts.Token));
+            await Task.Delay(TimeSpan.FromSeconds(2));
+            udpTunnel.Initialize(settings.UdpProxyPort);
+            _ = Task.Run(() => udpTunnel.StartAsync(session, session.Cts.Token));
+        } catch (Exception) {
+            throw;
         }
     }
 
-    public async Task ReconnectAsync () {
+    public async Task DisconnectAsync (SessionContext session) {
+        if(session  is null) { return; }
+        session.Cts.Cancel();
         try {
             await tunToNode.StopAsync();
             await nodeToTun.StopAsync();
             await udpTunnel.StopAsync();
             await tcpTunnel.StopAsync();
-        } catch {
-            healthSink
-                .OnConnectionLost(ConnectionLostReason.TransportError, session.Cts.Token);
+        } finally {
+            await muxConnection.DisposeAsync();
         }
+    }
+
+    public async Task ReconnectAsync (SessionContext session) {
+        if(session is null) {
+            throw new ArgumentNullException("not authorieze");
+        }
+        session.Cts.Cancel();
+        await muxConnection.DisposeAsync();
         try {
+            await tunToNode.StopAsync();
+            await nodeToTun.StopAsync();
+            await udpTunnel.StopAsync();
+            await tcpTunnel.StopAsync();
+        } catch { }
+        session.RenewCts();
+        try {
+            await muxConnection.ConnectAsync(session, session.Cts.Token);
             await ConnectAsync(session);
-        } catch {
-            healthSink
-                .OnConnectionLost(ConnectionLostReason.TransportError, session.Cts.Token);
+        } catch(Exception) {
+            throw;
         }
     }
 }

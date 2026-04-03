@@ -2,24 +2,27 @@
 using BlackTunnel.Core.Abstractions.Managers;
 using BlackTunnel.Domain.Auth;
 using BlackTunnel.Domain.Entities;
-using System.Xml.Linq;
 
 namespace BlackTunnel.Core.Auth;
 
 public class AuthController : IAuthController {
     private readonly ICredentialStore store;
     private readonly ISessionManager sessionManager;
+    private readonly IClientAuthService authService;
     private string acessToken;
     private string refreshToken;
     public AuthController (
             ICredentialStore store,
-            ISessionManager sessionManager) {
+            ISessionManager sessionManager,
+            IClientAuthService authService) {
         this.store = store;
         this.sessionManager = sessionManager;
+        this.authService = authService;
     }
 
     public async Task DisConnectasync () {
-
+        await sessionManager
+            .EndSessionAsync();
     }
 
     public async Task<AuthBaseResponse> ConnectAsync (string nodeHost, int nodePotr) {
@@ -35,7 +38,7 @@ public class AuthController : IAuthController {
                     Message = connToken?.Message ?? "Failed to retrieve the connection token"
                 };
             }
-            await sessionManager.CreteSessionAsync(connToken.ConnectionToken!, node);
+            await sessionManager.CreateSessionAsync(connToken.ConnectionToken!, node);
             return new AuthBaseResponse { IsSuccess = true };
         } catch (OperationCanceledException) {
             return new AuthBaseResponse { 
@@ -49,10 +52,17 @@ public class AuthController : IAuthController {
         }
     }
 
-    public Task<(string username, string password)?> GetCredentialDataAsync () {
-        throw new NotImplementedException();
+    public Task<(string username, string password)?> 
+            GetCredentialDataAsync () {
+        return store.GetAsync();
     }
 
+    /// <summary>
+    /// login in service web app 
+    /// </summary>
+    /// <param name="username"></param>
+    /// <param name="password"></param>
+    /// <returns></returns>
     public async Task<LoginResponse> LoginAsync (string username, string password) {
         var result = new LoginResponse() {
             IsSuccess = true,

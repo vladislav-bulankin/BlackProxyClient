@@ -3,6 +3,6 @@
 namespace BlackTunnel.Core.Abstractions.Managers; 
 public interface IConnectionManager {
     Task ConnectAsync(SessionContext context);
-    Task ReconnectAsync ();
-    Task DisconnectAsync ();
+    Task ReconnectAsync (SessionContext session);
+    Task DisconnectAsync (SessionContext session);
 }

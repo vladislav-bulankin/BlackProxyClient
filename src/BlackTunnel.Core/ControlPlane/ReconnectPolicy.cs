@@ -54,6 +54,8 @@ public class ReconnectPolicy : IHostedService {
                 } else {
                     await FullDisconnectAsync(reason);
                 }
+            } catch (Exception) {
+                throw;
             } finally {
                 Interlocked.Exchange(ref retryCount, 0);
             }
@@ -67,7 +69,11 @@ public class ReconnectPolicy : IHostedService {
         }
         retryCts?.Cancel();
         retryCts = new CancellationTokenSource();
-        await ReconnectAsync(retryCts.Token);
+        try {
+            await ReconnectAsync(retryCts.Token);
+        } catch (Exception) {
+            throw;
+        }
     }
 
     private async Task ReconnectAsync (CancellationToken token) {
@@ -79,15 +85,18 @@ public class ReconnectPolicy : IHostedService {
             await Task.Delay(delay, token);
             await sessionManager.ResumeAsync(token);
             retryCount = 0;
-        } catch { }
+        } catch(Exception) {
+            throw;
+        }
     }
 
     private async Task FullDisconnectAsync (ConnectionLostReason reason) {
         retryCount = 0;
         retryCts?.Cancel();
         routeTable.Clear();
-            try {
-            await sessionManager.EndSessionAsync(reason);
-        } catch { }
+        try {
+            await sessionManager.EndSessionAsync();
+        } catch {
+        }
     }
 }

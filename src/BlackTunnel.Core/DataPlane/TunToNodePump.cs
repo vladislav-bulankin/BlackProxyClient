@@ -30,7 +30,7 @@ public class TunToNodePump : ITunToNodePump {
         cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(ct);
         var winDivertObj = new WinDivertObject(settings.TcpProxyPort);
         if (!CreateHandle(winDivertObj.outboundFilter, out var hendl)){
-            throw new InvalidOperationException("Не удалось открыть WinDivert хэндл");
+            throw new InvalidOperationException("not open WinDivert hendl");
         }
         tunLissen = Task.Run(
             () => TunToNodeLoop(cancellationToken.Token, winDivertObj, hendl),
